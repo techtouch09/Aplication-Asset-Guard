@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplication Asset Guard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-page" class="login-container">
+        <form id="login-form">
+            <h2>Login RMI</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Masuk</button>
+        </form>
+    </div>
+
+    <div id="main-app" class="app-container hidden">
+        
+        <div id="main-app" class="app-container">
+            <header class="mobile-header">
+                <button id="menu-toggle" class="btn-menu">☰</button>
+                <h2 id="page-title">Data Barang</h2>
+            </header>
+        
+            <div id="sidebar-menu" class="sidebar-menu">
+                <div class="sidebar-header" style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #ddd;">
+                    <button class="close-menu" id="close-menu" style="margin-right: 15px; cursor: pointer;">✕</button>
+                    <h3 style="margin: 0; font-size: 1.2rem;">DB</h3>
+                </div>
+                
+                <nav class="nav-mobile" style="padding: 15px;">
+                    <button class="nav-link" data-target="tab-barang">Data Barang</button>
+                    <button class="nav-link" data-target="tab-peminjaman">Peminjaman</button>
+                    <button class="nav-link" data-target="tab-pengembalian">Pengembalian</button>
+                    
+                    <hr style="margin: 15px 0;">
+                    
+                    <button onclick="logout()" class="btn-logout" style="background:none; color:#c0392b; width: 100%; text-align: left; padding: 10px;">Keluar</button>
+                </nav>
+            
+                <div id="filter-laporan" class="form-card" style="margin: 15px; background: #f4f4f4; padding: 15px; border-radius: 8px;">
+                    <h3 style="margin-top: 0; font-size: 1rem;">Filter Cetak Laporan</h3>
+                    <label style="display: block; font-size: 0.9rem;">Dari:</label> 
+                    <input type="date" id="filter-tgl-mulai" style="width: 100%; margin-bottom: 10px;">
+                    <label style="display: block; font-size: 0.9rem;">Sampai:</label> 
+                    <input type="date" id="filter-tgl-selesai" style="width: 100%; margin-bottom: 10px;">
+                    <button onclick="cetakLaporanDariFilter()" style="width: 100%; background: #27ae60; color: white; border: none; padding: 10px; cursor: pointer;">Cetak Laporan</button>
+                </div>
+            </div>
+        
+            <main class="content">
+                </main>
+        </div>
+
+        <main class="content">
+            <button id="btn-toggle-form" class="btn-add">+ Tambah Data</button>
+            <input type="text" id="search-input" placeholder="Cari..." onkeyup="renderTable()">
+            
+            <div id="form-container-box" class="form-card hidden"></div>
+            
+            <table class="data-table">
+                <thead id="table-header-container"></thead>
+                <tbody id="data-table-body"></tbody>
+            </table>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
