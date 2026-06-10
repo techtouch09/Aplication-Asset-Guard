@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pencatatan Barang</title>
+    <!-- Pustaka Pendukung -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- File CSS Terpisah -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Halaman Login -->
+<div id="loginPage" class="login-page">
+    <div class="login-container">
+        <h2>Login - Aplikasi Pencatatan Barang</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Masukkan username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Masukkan password">
+        </div>
+        <button class="btn btn-primary" onclick="login()">Masuk</button>
+    </div>
+</div>
+
+<!-- Halaman Utama -->
+<div id="mainPage" class="hidden">
+    <!-- Navigasi -->
+    <nav>
+        <div class="nav-brand">APLIKASI PENCATATAN BARANG</div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        <ul class="nav-menu">
+            <li><a href="#" onclick="showSection('barangSection')">Data Barang</a></li>
+            <li><a href="#" onclick="showSection('pinjamSection')">Peminjaman</a></li>
+            <li><a href="#" onclick="showSection('kembaliSection')">Pengembalian</a></li>
+            <li><a href="#" onclick="showSection('laporanSection')">Laporan</a></li>
+            <li><a href="#" onclick="logout()" class="logout">Keluar</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <!-- Bagian Data Barang -->
+        <section id="barangSection" class="section">
+            <div class="header">
+                <h2>Data Barang</h2>
+                <button class="btn btn-success" onclick="toggleForm('formBarang')">+ Tambah Barang</button>
+            </div>
+
+            <!-- Form Tambah/Edit Barang -->
+            <form id="formBarang" class="form-container hidden" data-edit-id="">
+                <h3>Form Data Barang</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tanggal & Jam</label>
+                        <input type="datetime-local" id="tglBarang">
+                    </div>
+                    <div class="form-group">
+                        <label>Shift</label>
+                        <select id="shiftBarang" required>
+                            <option value="">-- Pilih Shift --</option>
+                            <option value="Shift 1">Shift 1</option>
+                            <option value="Shift 2">Shift 2</option>
+                            <option value="Shift 3">Shift 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kode Barang</label>
+                        <input type="text" id="kodeBarang" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Pekerja</label>
+                        <input type="text" id="pekerjaBarang" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Barang</label>
+                        <input type="text" id="namaBarang" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah</label>
+                        <input type="number" id="qtyBarang" min="1" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-success" onclick="simpanBarang()">Simpan</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm('formBarang')">Batal</button>
+                </div>
+            </form>
+
+            <!-- Pencarian -->
+            <div class="search-box">
+                <input type="text" id="searchBarang" placeholder="Cari kode / nama / pekerja / shift..." onkeyup="cariBarang()">
+            </div>
+
+            <!-- Tabel Data Barang - Sudah diperbaiki agar tidak terpotong -->
+            <div class="table-wrapper">
+                <table id="tabelBarang">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal & Jam</th>
+                            <th>Kode</th>
+                            <th>Pekerja</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Dipinjam</th>
+                            <th>Sisa Stok</th>
+                            <th>Shift</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Bagian Peminjaman -->
+        <section id="pinjamSection" class="section hidden">
+            <div class="header">
+                <h2>Data Peminjaman</h2>
+                <button class="btn btn-success" onclick="toggleForm('formPeminjaman')">+ Tambah Peminjaman</button>
+            </div>
+
+            <!-- Form Peminjaman -->
+            <form id="formPeminjaman" class="form-container hidden" data-edit-id="">
+                <h3>Form Peminjaman Barang</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tanggal & Jam</label>
+                        <input type="datetime-local" id="tglPinjam">
+                    </div>
+                    <div class="form-group">
+                        <label>Pilih Barang</label>
+                        <select id="pilihBarang" onchange="isiDataBarangPinjam()" required>
+                            <option value="">-- Pilih Barang --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kode Barang</label>
+                        <input type="text" id="kodePinjam" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Pekerja</label>
+                        <input type="text" id="pekerjaPinjam" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Barang</label>
+                        <input type="text" id="namaPinjam" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Pinjam</label>
+                        <input type="number" id="qtyPinjam" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Shift</label>
+                        <input type="text" id="shiftPinjam" readonly>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-success" onclick="simpanPeminjaman()">Simpan</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm('formPeminjaman')">Batal</button>
+                </div>
+            </form>
+
+            <!-- Pencarian -->
+            <div class="search-box">
+                <input type="text" id="searchPeminjaman" placeholder="Cari kode / nama / pekerja / shift..." onkeyup="cariPeminjaman()">
+            </div>
+
+            <!-- Tabel Peminjaman -->
+            <div class="table-wrapper">
+                <table id="tabelPeminjaman">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal & Jam</th>
+                            <th>Kode</th>
+                            <th>Pekerja</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Sudah Kembali</th>
+                            <th>Status</th>
+                            <th>Shift</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Bagian Pengembalian -->
+        <section id="kembaliSection" class="section hidden">
+            <div class="header">
+                <h2>Data Pengembalian</h2>
+                <button class="btn btn-success" onclick="toggleForm('formPengembalian')">+ Tambah Pengembalian</button>
+            </div>
+
+            <!-- Form Pengembalian -->
+            <form id="formPengembalian" class="form-container hidden" data-edit-id="">
+                <h3>Form Pengembalian Barang</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tanggal & Jam</label>
+                        <input type="datetime-local" id="tglKembali">
+                    </div>
+                    <div class="form-group">
+                        <label>Pilih Data Peminjaman</label>
+                        <select id="pilihPinjam" onchange="isiDataPinjamKembali()" required>
+                            <option value="">-- Pilih Data Peminjaman --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kode Barang</label>
+                        <input type="text" id="kodeKembali" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Pekerja</label>
+                        <input type="text" id="pekerjaKembali" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Barang</label>
+                        <input type="text" id="namaKembali" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Kembali</label>
+                        <input type="number" id="qtyKembali" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Shift</label>
+                        <input type="text" id="shiftKembali" readonly>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-success" onclick="simpanPengembalian()">Simpan</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm('formPengembalian')">Batal</button>
+                </div>
+            </form>
+
+            <!-- Pencarian -->
+            <div class="search-box">
+                <input type="text" id="searchPengembalian" placeholder="Cari kode / nama / pekerja / shift..." onkeyup="cariPengembalian()">
+            </div>
+
+            <!-- Tabel Pengembalian -->
+            <div class="table-wrapper">
+                <table id="tabelPengembalian">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal & Jam</th>
+                            <th>Kode</th>
+                            <th>Pekerja</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Shift</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Bagian Laporan -->
+        <section id="laporanSection" class="section hidden">
+            <h2>Laporan Data</h2>
+            
+            <div class="card">
+                <h3>Cetak Per Bagian</h3>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="cetakPerItem('barang')">Cetak Data Barang</button>
+                    <button class="btn btn-primary" onclick="cetakPerItem('peminjaman')">Cetak Peminjaman</button>
+                    <button class="btn btn-primary" onclick="cetakPerItem('pengembalian')">Cetak Pengembalian</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Cetak Periode Tanggal</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tanggal Mulai</label>
+                        <input type="date" id="tglMulai">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal Selesai</label>
+                        <input type="date" id="tglSelesai">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="cetakPeriode('pdf')">Cetak PDF</button>
+                    <button class="btn btn-success" onclick="cetakPeriode('excel')">Cetak Excel</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- File JavaScript Terpisah -->
+<script src="script.js"></script>
+</body>
+</html>
